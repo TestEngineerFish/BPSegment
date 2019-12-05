@@ -186,25 +186,55 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         if scrollView == self.contentScrollView {
             // 计算偏移
-            let offsetItem = (scrollView.contentOffset.x + scrollView.width / 2) / scrollView.width
-            let offsetIndexPath = IndexPath(item: Int(offsetItem), section: 0)
-            print(offsetItem, self.lastSelectedIndex.item)
-            if offsetIndexPath != self.lastSelectedIndex {
-                self.selectItem(with: offsetIndexPath, in: self.headerScrollView)
+            let indexPath = self.shouldIndexPath(offset: scrollView.contentOffset.x, in: self.contentScrollView)
+            print(indexPath, self.lastSelectedIndex.item)
+            if indexPath != self.lastSelectedIndex {
+                self.selectItem(with: indexPath, in: self.headerScrollView)
             }
         }
-        print("滑动结束")
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         if scrollView == self.contentScrollView {
             // 计算往左滑动还是往右滑动
+            let relativeX = self.contentItemSize.width * CGFloat(self.lastSelectedIndex.item)
+            let offsetX   =  scrollView.contentOffset.x - relativeX
+            if offsetX > 0 {
+                // 往左滑动
+                guard let currentItem = self.headerScrollView.cellForItem(at: self.lastSelectedIndex) as? BPItemHeaderView else {
+                    return
+                }
+                let progress = offsetX / self.contentScrollView.width
+                currentItem.switchOut(progress: progress, direction: .left)
+                // 下一个Item
+                let nextIndex = self.lastSelectedIndex.item + 1
+                if nextIndex < self.contentScrollView.numberOfItems(inSection: 0) {
+                    guard let nextItem = self.headerScrollView.cellForItem(at: IndexPath(item: nextIndex, section: 0)) as? BPItemHeaderView  else {
+                        return
+                    }
+                    nextItem.switchIn(progress: progress, direction: .left)
+                }
+            } else {
+                // 往右滑动
+                guard let currentItem = self.headerScrollView.cellForItem(at: self.lastSelectedIndex) as? BPItemHeaderView else {
+                    return
+                }
+                let progress = -offsetX / self.contentScrollView.width
+                currentItem.switchOut(progress: progress, direction: .right)
+                // 下一个Item
+                let nextIndex = self.lastSelectedIndex.item - 1
+                if nextIndex >= 0 {
+                    guard let nextItem = self.headerScrollView.cellForItem(at: IndexPath(item: nextIndex, section: 0)) as? BPItemHeaderView  else {
+                        return
+                    }
+                    nextItem.switchIn(progress: progress, direction: .right)
+                }
+            }
         }
-        print(scrollView.contentOffset.x)
     }
 
 
-    // TODO: ==== Tools ====
+    // TODO: ==== Event ====
 
     /// 选中Item,滑动显示到页面中间
     /// - Parameters:
@@ -240,25 +270,24 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
     private func scrollView(to indexPath: IndexPath, in collectionView: BPSegmentView) {
         self.headerScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         self.contentScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        return
-        // 滑动HeaderView
-//        var headOffsetX = CGFloat(indexPath.item) * (headerItemSize.width + headerItemSpacing) + headerItemSize.width / 2 - self.headerScrollView.width / 2
-//        let headMaxWidth = self.headerScrollView.contentSize.width - self.headerScrollView.width
-//        if headOffsetX < 0 {
-//            headOffsetX = 0
-//        } else if headOffsetX > headMaxWidth {
-//            headOffsetX = headMaxWidth
-//        }
-//        self.headerScrollView.setContentOffset(CGPoint(x: headOffsetX, y: 0), animated: true)
-//        // 滑动ContentView
-//        var contentOffsetX = CGFloat(indexPath.item) * (contentItemSize.width + contentItemSpacing) + contentItemSize.width / 2 - self.contentScrollView.width / 2
-//        let contentMaxWidth = self.contentScrollView.contentSize.width - self.contentScrollView.width
-//        if contentOffsetX < 0 {
-//            contentOffsetX = 0
-//        } else if contentOffsetX > contentMaxWidth {
-//            contentOffsetX = contentMaxWidth
-//        }
-//        self.contentScrollView.setContentOffset(CGPoint(x: contentOffsetX, y: 0), animated: true)
     }
+
+    // TODO: ==== Tools ===
+
+    /// 根据偏移量获取当前视图的IndexPath
+    /// - Parameters:
+    ///   - x: 偏移量
+    ///   - collectionView: 视图容器
+    private func shouldIndexPath(offset x: CGFloat, in collectionView: BPSegmentView) -> IndexPath {
+        if collectionView.isHeaderView {
+            // 暂无根据偏移量获取Header中IndexPath的需求
+            return IndexPath(item: 0, section: 0)
+        } else {
+            let offsetItem = (x + collectionView.width / 2) / collectionView.width
+            let indexPath = IndexPath(item: Int(offsetItem), section: 0)
+            return indexPath
+        }
+    }
+
 }
 

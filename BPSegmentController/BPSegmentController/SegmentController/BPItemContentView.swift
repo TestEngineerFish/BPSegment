@@ -12,8 +12,7 @@ class BPItemContentView: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        let _alpha = Int.random(in: 0..<11)
-        self.backgroundColor = UIColor.orange.withAlphaComponent(CGFloat(_alpha)/10.0)
+        self.backgroundColor = self.shouldRandomColor()
     }
 
     required init?(coder: NSCoder) {
@@ -22,5 +21,13 @@ class BPItemContentView: UICollectionViewCell {
     
     func bindData(_ title: String) {
         self.contentView.backgroundColor = UIColor.orange
+    }
+
+    func shouldRandomColor() -> UIColor {
+        let red   = CGFloat.random(in: 0..<1)
+        let green = CGFloat.random(in: 0..<1)
+        let blue  = CGFloat.random(in: 0..<1)
+        let color = UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+        return color
     }
 }

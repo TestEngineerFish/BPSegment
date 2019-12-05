@@ -9,6 +9,67 @@
 import UIKit
 
 extension CALayer {
+
+    /// 顶部距离父控件的距离
+    ///
+    ///     self.frame.origin.y
+    var top: CGFloat {
+        get{
+            return self.frame.origin.y
+        }
+
+        set{
+            var frame = self.frame
+            frame.origin.y = newValue
+            self.frame = frame
+        }
+    }
+
+    /// 左边距离父控件的距离
+    ///
+    ///     self.frame.origin.x
+    var left: CGFloat {
+        get{
+            return self.frame.origin.x
+        }
+
+        set{
+            var frame = self.frame
+            frame.origin.x = newValue
+            self.frame = frame
+        }
+    }
+
+    /// 当前View的底部,距离父控件顶部的距离
+    ///
+    ///     self.frame.maxY
+    var bottom: CGFloat {
+        get {
+            return self.frame.maxY
+        }
+
+        set {
+            var frame = self.frame
+            frame.origin.y = newValue - frame.size.height
+            self.frame = frame
+        }
+    }
+
+    /// 当前View的右边,距离父控件左边的距离
+    ///
+    ///     self.frame.maxX
+    var right: CGFloat {
+        get {
+            return self.frame.maxX
+        }
+
+        set {
+            var frame = self.frame
+            frame.origin.x = newValue + self.frame.size.width
+            self.frame = frame
+        }
+    }
+
     /// 宽度
     var width: CGFloat {
         get {

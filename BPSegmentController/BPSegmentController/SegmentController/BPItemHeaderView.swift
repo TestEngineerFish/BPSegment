@@ -8,7 +8,7 @@
 
 import UIKit
 
-protocol BPItemProtocol {
+protocol BPItemProtocol: NSObjectProtocol {
 //    func titleFont() -> UIFont
 //    func titleColor() -> UIColor
 //    func text() -> String
@@ -24,7 +24,7 @@ protocol BPItemProtocol {
     func switchOut(progress: Float)
 }
 
-class BPItemHeaderView: UICollectionViewCell, BPItemProtocol {
+class BPItemHeaderView: UICollectionViewCell {
     var backgroundLayer = CALayer()
     var lineLayer       = CAShapeLayer()
 
@@ -66,15 +66,37 @@ class BPItemHeaderView: UICollectionViewCell, BPItemProtocol {
 
     // TODO: ==== BPItemProtocol ====
 
-    func switchIn(progress: Float) {
+    func switchIn(progress: CGFloat, direction: SwitchDirectionType) {
+        print(progress)
         UIView.animate(withDuration: 0.1) {
-            self.alpha = CGFloat(progress)
-
+            self.backgroundLayer.opacity = Float(progress)
+            if direction == .left {
+                self.lineLayer.left  = 0
+                self.lineLayer.width = self.width * progress
+            } else {
+                self.lineLayer.left  = self.width - self.width * progress
+                self.lineLayer.width = self.width * progress
+            }
         }
     }
 
-    func switchOut(progress: Float) {
-
+    func switchOut(progress: CGFloat, direction: SwitchDirectionType) {
+        UIView.animate(withDuration: 0.1) {
+            self.backgroundLayer.opacity = 1 - Float(progress)
+            if direction == .left {
+                self.lineLayer.left  = self.width * progress
+                self.lineLayer.width = self.width - self.width * progress
+            } else {
+                self.lineLayer.left  = 0
+                self.lineLayer.width = self.width - self.width * progress
+            }
+        }
     }
+}
 
+enum SwitchDirectionType {
+    case left
+    case right
+    case up
+    case down
 }
