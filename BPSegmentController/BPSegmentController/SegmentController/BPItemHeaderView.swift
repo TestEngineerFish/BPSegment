@@ -9,12 +9,12 @@
 import UIKit
 
 protocol BPItemProtocol: NSObjectProtocol {
-//    func titleFont() -> UIFont
-//    func titleColor() -> UIColor
-//    func text() -> String
-//    func lineColor() -> UIColor
-//    func lineWidth() -> CGFloat
-//    func lineHeight() -> CGFloat
+    //    func titleFont() -> UIFont
+    //    func titleColor() -> UIColor
+    //    func text() -> String
+    //    func lineColor() -> UIColor
+    //    func lineWidth() -> CGFloat
+    //    func lineHeight() -> CGFloat
 
     /// 切入动画
     /// - Parameter progress: 切入进度
@@ -67,29 +67,26 @@ class BPItemHeaderView: UICollectionViewCell {
     // TODO: ==== BPItemProtocol ====
 
     func switchIn(progress: CGFloat, direction: SwitchDirectionType) {
-        print(progress)
-        UIView.animate(withDuration: 0.1) {
-            self.backgroundLayer.opacity = Float(progress)
-            if direction == .left {
-                self.lineLayer.left  = 0
-                self.lineLayer.width = self.width * progress
-            } else {
-                self.lineLayer.left  = self.width - self.width * progress
-                self.lineLayer.width = self.width * progress
-            }
+        self.lineLayer.opacity       = 1.0
+        self.backgroundLayer.opacity = Float(progress)
+        if direction == .left {
+            self.lineLayer.left  = 0
+            self.lineLayer.width = self.width * progress
+        } else {
+            self.lineLayer.left  = self.width - self.width * progress
+            self.lineLayer.width = self.width * progress
         }
     }
 
     func switchOut(progress: CGFloat, direction: SwitchDirectionType) {
-        UIView.animate(withDuration: 0.1) {
-            self.backgroundLayer.opacity = 1 - Float(progress)
-            if direction == .left {
-                self.lineLayer.left  = self.width * progress
-                self.lineLayer.width = self.width - self.width * progress
-            } else {
-                self.lineLayer.left  = 0
-                self.lineLayer.width = self.width - self.width * progress
-            }
+        self.lineLayer.opacity       = 1.0
+        self.backgroundLayer.opacity = 1 - Float(progress)
+        if direction == .left {
+            self.lineLayer.left  = self.width * progress
+            self.lineLayer.width = self.width - self.width * progress
+        } else {
+            self.lineLayer.left  = 0
+            self.lineLayer.width = self.width - self.width * progress
         }
     }
 }
