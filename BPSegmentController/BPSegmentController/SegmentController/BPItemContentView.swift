@@ -12,7 +12,8 @@ class BPItemContentView: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        self.backgroundColor = UIColor.orange
+        let _alpha = Int.random(in: 0..<11)
+        self.backgroundColor = UIColor.orange.withAlphaComponent(CGFloat(_alpha)/10.0)
     }
 
     required init?(coder: NSCoder) {

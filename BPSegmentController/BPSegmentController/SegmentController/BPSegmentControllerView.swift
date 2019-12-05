@@ -50,8 +50,10 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
 
     // ---- 数据
     var titleArray: [String]?
-    final let headerItemSize = CGSize(width: 50, height: 50)
-    final let contentITemSize = CGSize(width: 400, height: 1000)
+    final let headerItemSize     = CGSize(width: 50, height: 50)
+    final let headerItemSpacing  = CGFloat(30)
+    final let contentItemSize    = CGSize(width: UIScreen.main.bounds.width, height: 1000)
+    final let contentItemSpacing = CGFloat.zero
     final let headerItemIdf  = "BPItemView"
     final let contentItemIdf = "BPItemContentView"
     var lastSelectedIndex =  IndexPath()
@@ -90,13 +92,13 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
         headerFlowLayout = UICollectionViewFlowLayout()
         headerFlowLayout.scrollDirection         = .horizontal
         headerFlowLayout.itemSize                = headerItemSize
-        headerFlowLayout.minimumInteritemSpacing = 0
+        headerFlowLayout.minimumLineSpacing      = headerItemSpacing
         headerFlowLayout.sectionInset            = UIEdgeInsets.zero
 
         contentFlowLayout = UICollectionViewFlowLayout()
         contentFlowLayout.scrollDirection         = .horizontal
-        contentFlowLayout.itemSize                = contentITemSize
-        contentFlowLayout.minimumInteritemSpacing = 0
+        contentFlowLayout.itemSize                = contentItemSize
+        contentFlowLayout.minimumLineSpacing      = contentItemSpacing
         contentFlowLayout.sectionInset            = UIEdgeInsets.zero
         
         let headerFrame  = CGRect(x: 0, y: 0, width: self.frame.width, height: headerItemSize.height)
@@ -132,7 +134,6 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
         guard let segmentView = collectionView as? BPSegmentView else {
             return UICollectionViewCell()
         }
-
         if segmentView.isHeaderView {
             // 通过注册获取View
             guard let _itemView = collectionView.dequeueReusableCell(withReuseIdentifier: headerItemIdf, for: indexPath) as? BPItemHeaderView else {
@@ -178,42 +179,86 @@ class BPSegmentControllerView: UIView, UICollectionViewDataSource, UICollectionV
         guard let segmentView = collectionView as? BPSegmentView else {
             return
         }
-        if segmentView.isHeaderView {
-            // 设置当前选中效果
-            guard let cell = collectionView.cellForItem(at: indexPath) as? BPItemHeaderView else {
-                return
-            }
-            cell.isSelected = true
-            // 移除上一次选中效果
-            guard let lastCell = collectionView.cellForItem(at: self.lastSelectedIndex) as? BPItemHeaderView else {
-                return
-            }
-            lastCell.isSelected = false
-        } else {
-            // 设置当前选中效果
-            guard let cell = collectionView.cellForItem(at: indexPath) as? BPItemContentView else {
-                return
-            }
-            cell.isSelected = true
-            // 移除上一次选中效果
-            guard let lastCell = collectionView.cellForItem(at: self.lastSelectedIndex) as? BPItemContentView else {
-                return
-            }
-            lastCell.isSelected = false
-        }
-        // 滑动到对应视图
-        self.headerScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        self.contentScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
-        // 更新选中
-        self.lastSelectedIndex = indexPath
+        self.selectItem(with: indexPath, in: segmentView)
     }
 
     // MARK: ==== UIScrollViewDelegate ====
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        print(scrollView.contentOffset)
+    func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        if scrollView == self.contentScrollView {
+            // 计算偏移
+            let offsetItem = (scrollView.contentOffset.x + scrollView.width / 2) / scrollView.width
+            let offsetIndexPath = IndexPath(item: Int(offsetItem), section: 0)
+            print(offsetItem, self.lastSelectedIndex.item)
+            if offsetIndexPath != self.lastSelectedIndex {
+                self.selectItem(with: offsetIndexPath, in: self.headerScrollView)
+            }
+        }
+        print("滑动结束")
     }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if scrollView == self.contentScrollView {
+            // 计算往左滑动还是往右滑动
+        }
+        print(scrollView.contentOffset.x)
+    }
+
 
     // TODO: ==== Tools ====
 
+    /// 选中Item,滑动显示到页面中间
+    /// - Parameters:
+    ///   - indexPath: 选中的位置
+    ///   - collectionView: 视图对象
+    private func selectItem(with indexPath: IndexPath, in collectionView: BPSegmentView) {
+
+        // 如果选中不是已选中的Item,则更新最后选中位置
+        if indexPath != self.lastSelectedIndex {
+            // 设置标题栏当前选中效果
+            if let cell = self.headerScrollView.cellForItem(at: indexPath) as? BPItemHeaderView {
+                cell.isSelected = true
+            }
+            // 设置内容当前选中效果
+            if let cell = self.contentScrollView.cellForItem(at: indexPath) as? BPItemContentView {
+                cell.isSelected = true
+            }
+            // 移除上一次选中效果
+            if let lastCell = self.headerScrollView.cellForItem(at: self.lastSelectedIndex) as? BPItemHeaderView {
+                lastCell.isSelected = false
+            }
+            if let lastCell = self.contentScrollView.cellForItem(at: self.lastSelectedIndex) as? BPItemContentView {
+                lastCell.isSelected = false
+            }
+            // 滑动到中间
+            self.scrollView(to: indexPath, in: collectionView)
+            // 更新选中
+            self.lastSelectedIndex = indexPath
+        }
+    }
+
+    /// 滑动到对应位置
+    private func scrollView(to indexPath: IndexPath, in collectionView: BPSegmentView) {
+        self.headerScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        self.contentScrollView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+        return
+        // 滑动HeaderView
+//        var headOffsetX = CGFloat(indexPath.item) * (headerItemSize.width + headerItemSpacing) + headerItemSize.width / 2 - self.headerScrollView.width / 2
+//        let headMaxWidth = self.headerScrollView.contentSize.width - self.headerScrollView.width
+//        if headOffsetX < 0 {
+//            headOffsetX = 0
+//        } else if headOffsetX > headMaxWidth {
+//            headOffsetX = headMaxWidth
+//        }
+//        self.headerScrollView.setContentOffset(CGPoint(x: headOffsetX, y: 0), animated: true)
+//        // 滑动ContentView
+//        var contentOffsetX = CGFloat(indexPath.item) * (contentItemSize.width + contentItemSpacing) + contentItemSize.width / 2 - self.contentScrollView.width / 2
+//        let contentMaxWidth = self.contentScrollView.contentSize.width - self.contentScrollView.width
+//        if contentOffsetX < 0 {
+//            contentOffsetX = 0
+//        } else if contentOffsetX > contentMaxWidth {
+//            contentOffsetX = contentMaxWidth
+//        }
+//        self.contentScrollView.setContentOffset(CGPoint(x: contentOffsetX, y: 0), animated: true)
+    }
 }
 
